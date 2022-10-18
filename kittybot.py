@@ -1,17 +1,17 @@
-import os
 import logging
+import os
+
 import requests
-
-# from telegram import Bot
-from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
-from telegram import ReplyKeyboardMarkup
-
 from dotenv import load_dotenv
+from telegram import ReplyKeyboardMarkup
+from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
