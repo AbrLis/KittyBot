@@ -30,6 +30,24 @@ WEATHER_ICONS = {
     "50d": "🌫",
     "50n": "🌫",
 }
+WEATHER_DIRECTION = [
+    22.5,
+    "северный",
+    67.5,
+    "северо-восточный",
+    112.5,
+    "восточный",
+    157.5,
+    "юго-восточный",
+    202.5,
+    "южный",
+    247.5,
+    "юго-западный",
+    292.5,
+    "западный",
+    337.5,
+    "северо-западный",
+]
 
 logger_weather = logging.getLogger(__name__)
 logger_weather.setLevel(logging.INFO)
@@ -44,28 +62,14 @@ weather_dict = {}
 
 def get_wind_direction(degrees):
     """Возвращает направление ветра"""
-    if degrees < 22.5:
-        return "северный"
-    if degrees < 67.5:
-        return "северо-восточный"
-    if degrees < 112.5:
-        return "восточный"
-    if degrees < 157.5:
-        return "юго-восточный"
-    if degrees < 202.5:
-        return "южный"
-    if degrees < 247.5:
-        return "юго-западный"
-    if degrees < 292.5:
-        return "западный"
-    if degrees < 337.5:
-        return "северо-западный"
-    return "северный"
+    for i in range(0, len(WEATHER_DIRECTION), 2):
+        if degrees < WEATHER_DIRECTION[i]:
+            return WEATHER_DIRECTION[i + 1]
 
 
 def get_time(unixtime, tz) -> str:
     """Возвращает время в формате HH:MM:SS c учетом часового пояса"""
-    if not tz:
+    if not tz or not unixtime:
         return "нет данных"
     tz = timezone(+timedelta(seconds=tz))
     return datetime.fromtimestamp(unixtime, tz).strftime("%H:%M:%S")
@@ -77,7 +81,7 @@ def parse_weather(result):
         logger_weather.info(f"Парсинг погоды {result}")
         city = result.get("name")
         conditions = result.get("weather")[0].get("description")
-        temp = int(result.get("main").get("temp"))
+        temperature = int(result.get("main").get("temp"))
         temp_feels_like = int(result.get("main").get("feels_like"))
         wind = result["wind"]["speed"]
         wind_gust = result.get("wind").get("gust") or "нет данных"
@@ -85,19 +89,22 @@ def parse_weather(result):
         icon = WEATHER_ICONS.get(result["weather"][0]["icon"])
         visibility = result["visibility"] / 1000
         tz = result.get("timezone")
+        date = get_time(result["dt"], tz)
         sunraise = get_time(result["sys"]["sunrise"], tz)
         sunset = get_time(result["sys"]["sunset"], tz)
         logger_weather.info("Парсинг погоды завершен успешно")
         return (
+            f"Данные от: {date}\n"
             f"Погода в городе {city}: {conditions} {icon}\n "
-            f"🌡Температура {temp}°C, Ощущается как {temp_feels_like}°C\n"
+            f"🌡Температура {temperature}°C, "
+            f"Ощущается как {temp_feels_like}°C\n"
             f"Средняя видимость: {visibility} км\n"
             f"Направление ветра: {wind_direction}\n"
             f"💨 {wind} м/с, порывами до 💨 {wind_gust} м/с\n"
             f"🌅Восход: {sunraise}, 🌇Закат: {sunset}"
         )
     except Exception as e:
-        logger_weather.error(f"Ошибка обработки ответа API погоды: {e}")
+        logger_weather.error(f"Ошибка при парсинге данных погоды: {e}")
         return "Извините, произошла ошибка, неожиданный ответ сервиса"
 
 
@@ -134,7 +141,6 @@ def send_weather(update, context) -> None:
         weather_dict[chat.id] = city.strip()
     if chat.id in weather_dict:
         city = weather_dict.get(chat.id)
-        # Запрос к api погоды
         message = get_weather(city)
     else:
         message = (
