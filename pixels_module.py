@@ -1,10 +1,9 @@
 import json
-import os
 import logging
+import os
 
 import requests
 from dotenv import load_dotenv
-
 
 load_dotenv()
 API_PEXELS = os.getenv("API_PIXELS")
@@ -34,8 +33,11 @@ def save_page():
     """Сохранение страницы"""
     # Так как страницы статичны, то приходится их сохранить дабы не было
     # повторов
-    with open(file_ulr, "w") as f:
-        json.dump(page, f)
+    try:
+        with open(file_ulr, "w") as f:
+            json.dump(page, f)
+    except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+        logger_pexel.error(f"Ошибка сохранения страницы: {e}")
 
 
 def get_first_page() -> None:
@@ -73,20 +75,20 @@ def get_pexel_page() -> str:
             save_page()
         except Exception as e:
             logger_pexel.error(f"Ошибка доступа к API pixels: {e}")
-            page = None
+            page = {}
             return "Не удалось получить страницу"
 
 
 def send_pixel(update, context) -> None:
-    """Отправляет случайный пиксель"""
+    """Отправляет следующую картинку"""
     err = get_pexel_page()
     chat = update.effective_chat
     if err:
         context.bot.send_message(chat_id=update.chat.id, text=err)
         return
     try:
-        logger_pexel.info("Запрос нового пикселя")
-        photo = page["photos"][0]["src"]["large2x"]
+        logger_pexel.info("Запрос нового фото")
+        photo = page["photos"][0]["src"]["large"]
         alt = page["photos"][0]["alt"]
     except Exception as e:
         logger_pexel.error(f"Ошибка получения фото: {e}")
@@ -94,5 +96,5 @@ def send_pixel(update, context) -> None:
             chat_id=chat.id, text="Ошибка получения фото :("
         )
     else:
-        logger_pexel.info("Отправка пикселя")
+        logger_pexel.info(f"Отправка фото номер: {page.get('page')}")
         context.bot.send_photo(chat_id=chat.id, photo=photo, caption=alt)

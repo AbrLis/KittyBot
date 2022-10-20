@@ -1,13 +1,13 @@
-import os
 import logging
+import os
 
 import requests
 from dotenv import load_dotenv
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from weather_module import send_weather
 from pixels_module import send_pixel
+from weather_module import send_weather
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")

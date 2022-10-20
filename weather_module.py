@@ -1,10 +1,10 @@
-import os
+import json
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 import requests
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
@@ -59,7 +59,13 @@ handler.setFormatter(
 )
 logger_weather.addHandler(handler)
 
-weather_dict = {}
+weater_path = "./file/weather_dict.json"
+try:
+    with open(weater_path, "r") as f:
+        weather_dict = json.load(f)
+except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+    logger_weather.error(f"Файл не найден, забыл всех пользователей {e}")
+    weather_dict = {}
 
 
 def get_wind_direction(degrees):
@@ -141,6 +147,7 @@ def send_weather(update, context) -> None:
     city = update.message.text.replace("/weather", "")
     if city and isinstance(city, str):
         weather_dict[chat.id] = city.strip()
+        save_weather()
     if chat.id in weather_dict:
         city = weather_dict.get(chat.id)
         message = get_weather(city)
@@ -151,3 +158,13 @@ def send_weather(update, context) -> None:
             "Я запомню тебя и в будущем уже не буду спрашивать ❤\n"
         )
     context.bot.send_message(chat_id=chat.id, text=message)
+
+
+def save_weather() -> None:
+    """Сохраняет новых пользователей в файл"""
+    try:
+        with open("weather_dict.json", "w") as f:
+            json.dump(weather_dict, f)
+            logger_weather.info("Словарь пользователей сохранен в файл")
+    except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
+        logger_weather.error(f"Ошибка сохранения словаря пользователей: {e}")
