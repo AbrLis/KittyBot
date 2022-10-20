@@ -47,6 +47,8 @@ WEATHER_DIRECTION = [
     "западный",
     337.5,
     "северо-западный",
+    360,
+    "северный",
 ]
 
 logger_weather = logging.getLogger(__name__)
