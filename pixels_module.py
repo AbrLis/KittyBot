@@ -29,18 +29,18 @@ except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
     page = {}
 
 
-def save_page():
+def save_page(chat_id):
     """Сохранение страницы"""
     # Так как страницы статичны, то приходится их сохранить дабы не было
     # повторов
     try:
         with open(file_ulr, "w") as f:
-            json.dump(page, f)
+            json.dump({chat_id: page}, f)
     except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
         logger_pexel.error(f"Ошибка сохранения страницы: {e}")
 
 
-def get_first_page() -> None:
+def get_first_page(chat) -> None:
     """Получение первой страницы"""
     global page
     params = {
@@ -58,21 +58,21 @@ def get_first_page() -> None:
         page = {}
     else:
         page = response
-        save_page()
+        save_page(chat)
 
 
-def get_pexel_page() -> str:
+def get_pexel_page(chat) -> str:
     """Получение следующей страницы"""
     global page
     if not page or not page.get("next_page"):
-        get_first_page()
+        get_first_page(chat)
         if not page:
             logging.error("Не удалось получить первую страницу")
             return "Не удалось получить страницу"
     else:
         try:
             page = requests.get(page["next_page"], headers=headers).json()
-            save_page()
+            save_page(chat)
         except Exception as e:
             logger_pexel.error(f"Ошибка доступа к API pixels: {e}")
             page = {}
@@ -81,8 +81,8 @@ def get_pexel_page() -> str:
 
 def send_pixel(update, context) -> None:
     """Отправляет следующую картинку"""
-    err = get_pexel_page()
     chat = update.effective_chat
+    err = get_pexel_page(chat.id)
     if err:
         context.bot.send_message(chat_id=update.chat.id, text=err)
         return

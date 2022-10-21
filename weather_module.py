@@ -146,10 +146,10 @@ def send_weather(update, context) -> None:
     chat = update.effective_chat
     city = update.message.text.replace("/weather", "")
     if city and isinstance(city, str):
-        weather_dict[chat.id] = city.strip()
+        weather_dict[str(chat.id)] = city.strip()
         save_weather()
-    if chat.id in weather_dict:
-        city = weather_dict.get(chat.id)
+    if str(chat.id) in weather_dict:
+        city = weather_dict.get(str(chat.id))
         message = get_weather(city)
     else:
         message = (
@@ -163,8 +163,9 @@ def send_weather(update, context) -> None:
 def save_weather() -> None:
     """Сохраняет новых пользователей в файл"""
     try:
-        with open("weather_dict.json", "w") as f:
-            json.dump(weather_dict, f)
+        logger_weather.info("Попытка сохранение нового пользователя.")
+        with open(weater_path, "w") as fi:
+            json.dump(weather_dict, fi)
             logger_weather.info("Словарь пользователей сохранен в файл")
-    except (FileNotFoundError, json.decoder.JSONDecodeError) as e:
-        logger_weather.error(f"Ошибка сохранения словаря пользователей: {e}")
+    except (FileNotFoundError, json.decoder.JSONDecodeError) as er:
+        logger_weather.error(f"Ошибка сохранения словаря пользователей: {er}")

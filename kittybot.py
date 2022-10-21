@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from pixels_module import send_pixel
+from pexel_module2 import send_pixel
 from weather_module import send_weather
 
 load_dotenv()
