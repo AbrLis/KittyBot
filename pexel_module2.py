@@ -15,11 +15,10 @@ headers = {
     "Authorization": API_PEXELS,
 }
 params = {
-    "query": "fox",
+    "query": "animals",
     "per_page": 1,
     "page": 1,
 }
-file_path = "./file/page_fox.json"
 total_results = {}
 
 logger_pexel = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ def send_pixel(update, context) -> None:
         logger_pexel.info("Отправка фото")
         context.bot.send_photo(
             chat_id=int(chat_id),
-            photo=response["photos"][0]["src"]["large"],
+            photo=response["photos"][0]["src"]["large2x"],
             caption=response["photos"][0]["alt"],
         )
     except Exception as e:
