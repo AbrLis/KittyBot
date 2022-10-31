@@ -36,7 +36,7 @@ def wake_up(update, context) -> None:
     logger_kitty.info("Меня будят -)")
     chat = update.effective_chat
     button = ReplyKeyboardMarkup(
-        [["/newcat", "/newanimal", "/weather"]], resize_keyboard=True
+        [["/newcat", "/newpic", "/weather"]], resize_keyboard=True
     )
     context.bot.send_message(
         chat_id=chat.id,
@@ -67,7 +67,7 @@ def main():
     """Инициализация бота"""
     updater.dispatcher.add_handler(CommandHandler("start", wake_up))
     updater.dispatcher.add_handler(CommandHandler("newcat", send_cat))
-    updater.dispatcher.add_handler(CommandHandler("newanimal", send_pixel))
+    updater.dispatcher.add_handler(CommandHandler("newpic", send_pixel))
     updater.dispatcher.add_handler(CommandHandler("weather", send_weather))
     updater.dispatcher.add_handler(MessageHandler(Filters.text, say_hi))
     updater.start_polling()

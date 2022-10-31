@@ -20,6 +20,7 @@ params = {
     "page": 1,
 }
 total_results = {}
+new_search = False
 
 logger_pexel = logging.getLogger(__name__)
 logger_pexel.setLevel(logging.INFO)
@@ -50,6 +51,7 @@ def get_pexel(page=1) -> dict:
 
 def get_page(chat_id) -> dict:
     """Получение страницы"""
+    global new_search
     time_now = time.time()
     diff_time = (
         time_now - total_results["date"]
@@ -58,12 +60,19 @@ def get_page(chat_id) -> dict:
     )
     # Запрос максимального числа картинок
     # если с последнего запроса прошло больше суток
-    if not total_results or diff_time > DAY_IN_SECONDS:
+    # или это новый поиск
+    if new_search or not total_results or diff_time > DAY_IN_SECONDS:
         logger_pexel.info("Запрос максимального числа картинок")
         response = get_pexel()
         if "error" in response:
             return response
         total_results["date"] = time.time()
+        if response["total_results"] == 0:
+            return {
+                "error": "Не смог найти картинок по вашему запросу :(\n "
+                "Введите запрос на английском языке"
+            }
+        new_search = False
         total_results["total_results"] = response.get("total_results")
     # Запрос случайной картинки из всего списка
     page = random.randint(1, total_results["total_results"])
@@ -73,7 +82,12 @@ def get_page(chat_id) -> dict:
 
 def send_pixel(update, context) -> None:
     """Отправляет следующую картинку"""
+    global new_search
     chat_id = str(update.effective_chat.id)
+    search = update.message.text.split(" ", 1)
+    if len(search) > 1 and isinstance(search[1], str):
+        params["query"] = search[1]
+        new_search = True
     response = get_page(chat_id)
     if "error" in response:
         context.bot.send_message(chat_id=chat_id, text=response["error"])
@@ -83,7 +97,11 @@ def send_pixel(update, context) -> None:
         context.bot.send_photo(
             chat_id=int(chat_id),
             photo=response["photos"][0]["src"]["large2x"],
-            caption=response["photos"][0]["alt"],
+            caption=(
+                f'Всего найдено картинок: {total_results["total_results"]}\n'
+                f'Текущая картинка: {params["page"]}\n'
+                f'{response["photos"][0]["alt"]}'
+            ),
         )
     except Exception as e:
         logger_pexel.error(f"Ошибка отправки фото: {e}")
