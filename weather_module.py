@@ -50,6 +50,7 @@ WEATHER_DIRECTION = [
     360,
     "северный",
 ]
+KNOTS_IN_METER_PER_SECOND = 1.94384449
 
 logger_weather = logging.getLogger(__name__)
 logger_weather.setLevel(logging.INFO)
@@ -91,8 +92,13 @@ def parse_weather(result):
         conditions = result.get("weather")[0].get("description")
         temperature = int(result.get("main").get("temp"))
         temp_feels_like = int(result.get("main").get("feels_like"))
-        wind = result["wind"]["speed"]
-        wind_gust = result.get("wind").get("gust") or "нет данных"
+        wind = round(result["wind"]["speed"] / KNOTS_IN_METER_PER_SECOND, 2)
+        wind_gust = (
+            round(
+                (result.get("wind").get("gust") / KNOTS_IN_METER_PER_SECOND), 2
+            )
+            or "нет данных"
+        )
         wind_direction = get_wind_direction(result["wind"]["deg"])
         icon = WEATHER_ICONS.get(result["weather"][0]["icon"])
         visibility = result["visibility"] / 1000
@@ -128,6 +134,7 @@ def get_weather(city) -> str:
                 "lang": "ru",
                 "APPID": API_WEATHER,
             },
+            timeout=5,
         ).json()
         if result.get("cod") != 200:
             logger_weather.info(

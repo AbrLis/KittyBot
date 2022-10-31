@@ -52,7 +52,7 @@ def send_cat(update, context) -> None:
     chat = update.effective_chat
     try:
         logger_kitty.info("Запрос нового котика")
-        photo = requests.get(API_CAT).json()[0].get("url")
+        photo = requests.get(API_CAT, timeout=5).json()[0].get("url")
     except Exception as e:
         logger_kitty.error(f"Ошибка доступа к API котиков: {e}")
         context.bot.send_message(

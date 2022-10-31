@@ -39,6 +39,7 @@ def get_pexel(page=1) -> dict:
             API_PEXELS_URL,
             params=params,
             headers=headers,
+            timeout=5,
         ).json()
     except Exception as e:
         logger_pexel.error(f"Ошибка запроса: {e}")
